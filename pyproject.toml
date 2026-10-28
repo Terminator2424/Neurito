@@ -1,7 +1,7 @@
 [project]
 name = "neurito"
 version = "0.1.0"
-description = "Add your description here"
+description = "Neurito: mascota virtual con red neuronal en NumPy, pero no afecta nada."
 readme = "README.md"
 authors = [
     { name = "Terminator2424", email = "edisonjgv@gmail.com" }
