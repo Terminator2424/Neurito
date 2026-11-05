@@ -1,9 +1,14 @@
 """Experimentos para Neurito (sin pygame). Ejecutar: python experiments.py"""
 import numpy as np
 
+N_INPUTS = 4   # hambre, energia, aburrimiento, suciedad
+N_ACTIONS = 4  # comer, dormir, jugar, banarse
+
 
 def policy(data):
-    return np.argmax(np.column_stack((data[:, 0], 1 - data[:, 1], data[:, 2])), axis=1)
+    return np.argmax(
+        np.column_stack((data[:, 0], 1 - data[:, 1], data[:, 2], data[:, 3])), axis=1
+    )
 
 
 def relu(v):
@@ -17,12 +22,12 @@ def softmax(v):
 
 def train(hidden_units=6, epochs=1200, lr=0.1, seed=42):
     np.random.seed(seed)
-    X = np.random.rand(3000, 3)
+    X = np.random.rand(3000, N_INPUTS)
     y = policy(X)
-    W1 = np.random.randn(3, hidden_units) * 0.5
+    W1 = np.random.randn(N_INPUTS, hidden_units) * 0.5
     b1 = np.zeros((1, hidden_units))
-    W2 = np.random.randn(hidden_units, 3) * 0.5
-    b2 = np.zeros((1, 3))
+    W2 = np.random.randn(hidden_units, N_ACTIONS) * 0.5
+    b2 = np.zeros((1, N_ACTIONS))
     n = len(X)
     loss = float("nan")
     for _ in range(epochs):
@@ -42,7 +47,7 @@ def train(hidden_units=6, epochs=1200, lr=0.1, seed=42):
         b1 -= lr * gb1
         W2 -= lr * gW2
         b2 -= lr * gb2
-    test = np.random.rand(1000, 3)
+    test = np.random.rand(1000, N_INPUTS)
     pred = softmax(relu(test @ W1 + b1) @ W2 + b2)
     acc = np.mean(np.argmax(pred, axis=1) == policy(test))
     net = (W1, b1, W2, b2)
@@ -54,7 +59,7 @@ def predict(net, needs):
     return softmax(relu(np.array([needs]) @ W1 + b1) @ W2 + b2)[0]
 
 
-ACTIONS = ("EAT", "SLEEP", "PLAY")
+ACTIONS = ("EAT", "SLEEP", "PLAY", "BATHE")
 
 
 def show(needs, net):
@@ -66,23 +71,29 @@ if __name__ == "__main__":
     loss, acc, net = train()
     print(f"BASE (6 neuronas, 1200 epocas, lr 0.1): loss={loss:.4f} acc={acc:.2%}\n")
 
-    print("EXPERIMENTO 1: variar una necesidad, fijar las otras dos")
-    print("-- variar hambre (energia=0.5, aburrimiento=0.3)")
+    print("EXPERIMENTO 1: variar una necesidad, fijar las otras tres")
+    print("-- variar hambre (energia=0.5, aburrimiento=0.3, suciedad=0.3)")
     for v in np.arange(0, 1.01, 0.1):
-        a, p = show([v, 0.5, 0.3], net)
+        a, p = show([v, 0.5, 0.3, 0.3], net)
         print(f"hambre={v:.1f} -> {a:5s} {np.round(p*100,1)}")
-    print("-- variar energia (hambre=0.3, aburrimiento=0.3)")
+    print("-- variar energia (hambre=0.3, aburrimiento=0.3, suciedad=0.3)")
     for v in np.arange(0, 1.01, 0.1):
-        a, p = show([0.3, v, 0.3], net)
+        a, p = show([0.3, v, 0.3, 0.3], net)
         print(f"energia={v:.1f} -> {a:5s} {np.round(p*100,1)}")
-    print("-- variar aburrimiento (hambre=0.3, energia=0.5)")
+    print("-- variar aburrimiento (hambre=0.3, energia=0.5, suciedad=0.3)")
     for v in np.arange(0, 1.01, 0.1):
-        a, p = show([0.3, 0.5, v], net)
+        a, p = show([0.3, 0.5, v, 0.3], net)
         print(f"aburr={v:.1f} -> {a:5s} {np.round(p*100,1)}")
+    print("-- variar suciedad (hambre=0.3, energia=0.5, aburrimiento=0.3)")
+    for v in np.arange(0, 1.01, 0.1):
+        a, p = show([0.3, 0.5, 0.3, v], net)
+        print(f"suciedad={v:.1f} -> {a:5s} {np.round(p*100,1)}")
 
     print("\nEXPERIMENTO 2: prioridades casi empatadas")
-    for needs in ([0.50, 0.50, 0.50], [0.60, 0.40, 0.40], [0.61, 0.39, 0.60],
-                  [0.70, 0.30, 0.69], [0.90, 0.10, 0.10], [0.20, 0.90, 0.20]):
+    for needs in ([0.50, 0.50, 0.50, 0.50], [0.60, 0.40, 0.40, 0.40],
+                  [0.61, 0.39, 0.60, 0.30], [0.70, 0.30, 0.69, 0.20],
+                  [0.30, 0.50, 0.30, 0.51], [0.30, 0.50, 0.30, 0.49],
+                  [0.90, 0.10, 0.10, 0.10], [0.20, 0.90, 0.20, 0.90]):
         a, p = show(needs, net)
         print(f"{needs} -> {a:5s} {np.round(p*100,1)}")
 
@@ -108,14 +119,14 @@ if __name__ == "__main__":
 
     print("\nACIERTO ENGANOSO: clase mayoritaria")
     np.random.seed(42)
-    T = np.random.rand(100000, 3)
+    T = np.random.rand(100000, N_INPUTS)
     c = np.bincount(policy(T)) / len(T)
     print("proporcion por clase", np.round(c, 3), "-> siempre predecir la mayor:", f"{c.max():.2%}")
     # error cerca de la frontera
     _, _, net2 = train()
     W1, b1, W2, b2 = net2
     pr = np.argmax(softmax(relu(T @ W1 + b1) @ W2 + b2), axis=1)
-    sc = np.column_stack((T[:, 0], 1 - T[:, 1], T[:, 2]))
+    sc = np.column_stack((T[:, 0], 1 - T[:, 1], T[:, 2], T[:, 3]))
     srt = np.sort(sc, axis=1)
     margin = srt[:, -1] - srt[:, -2]
     err = pr != policy(T)
