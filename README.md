@@ -98,3 +98,89 @@ ReLU convierte los valores negativos en cero y deja igual los positivos. Se usa 
 pip install numpy pygame
 python main.py
 python experiments.py
+
+---
+
+# Neurito 2.0: aprende a saltar obstáculos
+
+Neurito aprende **cuándo saltar** ante obstáculos que llegan con distintas velocidades. La red neuronal está hecha a mano con NumPy y el entrenamiento se ve en vivo con Pygame.
+
+## Cómo funciona
+
+- **Entradas (3):** distancia al obstáculo, velocidad y tiempo estimado hasta el choque (distancia / velocidad), todas normalizadas.
+- **Arquitectura:** 3 → 12 → 1, con ReLU en la capa oculta y sigmoide en la salida.
+- **Decisión:** si la salida es mayor o igual a 0.5 y Neurito está en el suelo, salta.
+- **Aprendizaje supervisado**, no por refuerzo: las etiquetas salen de una regla (saltar cuando el tiempo estimado está entre 7 y 13 fotogramas).
+- **Entrenamiento:** entropía cruzada binaria, retropropagación y descenso de gradiente.
+- Los datos están balanceados (mitad saltar, mitad esperar) para que la red no gane precisión diciendo siempre "esperar".
+
+## Archivos nuevos
+
+- `salto_modelo.py`: red neuronal y generación de datos.
+- `salto_juego.py`: física del salto y colisiones.
+- `saltar.py`: juego y visualización del entrenamiento.
+- `GUIA_SALTO.md`: guía con los experimentos.
+
+## Ejecución
+
+Ejecutar `uv sync` y luego `uv run saltar.py`. No requiere dependencias nuevas (NumPy y Pygame).
+
+## Controles
+
+| Tecla | Función |
+|---|---|
+| `1` | Entrenar una época |
+| `2` | Entrenar cien épocas |
+| `3` | Entrenamiento continuo (activar/pausar) |
+| `A` | Alternar automático / manual |
+| `Espacio` | Saltar manualmente |
+| `C` | Reiniciar pista y contadores |
+| `R` | Reiniciar pesos |
+| `Esc` | Salir |
+
+## Idea central
+
+Una precisión alta en los datos de prueba no garantiza buen resultado en el juego, porque el choque también depende de la física del salto.
+
+---
+
+# Neurito 2.0: aprende a saltar obstáculos
+
+Neurito aprende **cuándo saltar** ante obstáculos que llegan con distintas velocidades. La red neuronal está hecha a mano con NumPy y el entrenamiento se ve en vivo con Pygame.
+
+## Cómo funciona
+
+- **Entradas (3):** distancia al obstáculo, velocidad y tiempo estimado hasta el choque (distancia / velocidad), todas normalizadas.
+- **Arquitectura:** 3 → 12 → 1, con ReLU en la capa oculta y sigmoide en la salida.
+- **Decisión:** si la salida es mayor o igual a 0.5 y Neurito está en el suelo, salta.
+- **Aprendizaje supervisado**, no por refuerzo: las etiquetas salen de una regla (saltar cuando el tiempo estimado está entre 7 y 13 fotogramas).
+- **Entrenamiento:** entropía cruzada binaria, retropropagación y descenso de gradiente.
+- Los datos están balanceados (mitad saltar, mitad esperar) para que la red no gane precisión diciendo siempre "esperar".
+
+## Archivos nuevos
+
+- `salto_modelo.py`: red neuronal y generación de datos.
+- `salto_juego.py`: física del salto y colisiones.
+- `saltar.py`: juego y visualización del entrenamiento.
+- `GUIA_SALTO.md`: guía con los experimentos.
+
+## Ejecución
+
+Ejecutar `uv sync` y luego `uv run saltar.py`. No requiere dependencias nuevas (NumPy y Pygame).
+
+## Controles
+
+| Tecla | Función |
+|---|---|
+| `1` | Entrenar una época |
+| `2` | Entrenar cien épocas |
+| `3` | Entrenamiento continuo (activar/pausar) |
+| `A` | Alternar automático / manual |
+| `Espacio` | Saltar manualmente |
+| `C` | Reiniciar pista y contadores |
+| `R` | Reiniciar pesos |
+| `Esc` | Salir |
+
+## Idea central
+
+Una precisión alta en los datos de prueba no garantiza buen resultado en el juego, porque el choque también depende de la física del salto.
