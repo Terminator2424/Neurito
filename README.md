@@ -1,12 +1,14 @@
+@'
 # Neurito
 
 Edison Javier Gonzalez Velosa
 Inteligencia Artificial - Universidad Santo Tomás, Seccional Tunja
 
-Este repositorio tiene dos proyectos que comparten la misma mascota y la misma idea: una red neuronal pequeña hecha a mano con NumPy.
+Este repositorio tiene tres proyectos que comparten la misma mascota y la misma idea: una red neuronal pequeña hecha a mano con NumPy.
 
 - Parte 1: Neurito, la mascota que decide si comer, dormir o jugar.
 - Parte 2: Neurito 2.0, que aprende cuándo saltar obstáculos.
+- Parte 3: Neurito 3.0, que aprende a encontrar comida en un laberinto.
 
 ---
 
@@ -17,7 +19,7 @@ Neurito es una mascota virtual controlada por una red neuronal pequeña hecha co
 ### Archivos
 
 - `main.py`: el programa de Neurito. Al inicio tiene las constantes `HIDDEN_UNITS`, `EPOCHS` y `LEARNING_RATE` para repetir los experimentos. Con las teclas 1, 2, 3 y 4 se re-entrena la red con 3, 6, 10 o 20 neuronas ocultas y se muestran la pérdida y la precisión en pantalla.
-- `experiments.py`: script que repite los experimentos y imprime los resultados (`python experiments.py`).
+- `experiments.py`: script que repite los experimentos e imprime los resultados (`python experiments.py`).
 - `assets/`: imágenes de Neurito.
 
 ### Cómo se entrena
@@ -99,4 +101,100 @@ ReLU convierte los valores negativos en cero y deja igual los positivos. Se usa 
 - Se mide contra una regla que nosotros mismos inventamos, así que 99 % solo dice que la red copió bien esa regla, no que decida bien en el mundo real.
 - Depende de la semilla aleatoria: con la misma configuración la precisión fue de 99.4 % con una semilla y de 64.7 % con otra.
 - Los pocos errores ocurren en los empates, justo donde la decisión es más difícil, y el número total no lo muestra.
-- Si una acción fuera mucho más común que las otras, adivinar siempre esa acción daría buena precisión
+- Si una acción fuera mucho más común que las otras, adivinar siempre esa acción daría buena precisión.
+
+---
+
+## Parte 2: Neurito 2.0 (Aprende a saltar)
+
+*(Nota: Esta sección se mantiene de tu repositorio original).*
+
+---
+
+## Parte 3: Neurito 3.0 (Aprende a encontrar comida en un laberinto)
+
+Neurito busca comida dentro de tres laberintos. Su cerebro debe elegir entre arriba, abajo, izquierda y derecha. La red se construye con NumPy, y Pygame dibuja el escenario, la mascota y una gráfica de la pérdida.
+
+### Cómo aprende
+
+1. BFS calcula rutas cortas y genera ejemplos etiquetados: mapa, posición, meta y movimiento recomendado.
+2. Los ejemplos se dividen en entrenamiento (80 %) y prueba (20 %). Los pares posición-meta de prueba no aparecen en entrenamiento.
+3. Cada entrada incluye un vector one-hot de tres mapas y dos vectores one-hot de 81 casillas: 165 características.
+4. La arquitectura es 165 -> 96 -> 4. Usa ReLU en la capa oculta y Softmax en las cuatro salidas.
+5. El entrenamiento minimiza entropía cruzada multiclase mediante retropropagación y descenso de gradiente con mini-lotes.
+6. Durante el juego, el modelo decide sin consultar BFS. BFS es el experto que proporcionó las etiquetas.
+
+Esto es aprendizaje supervisado por imitación, NO aprendizaje por refuerzo.
+
+### Dos modos
+
+- Red pura: toma la salida de mayor probabilidad. Puede chocar con paredes o quedarse en ciclos.
+- Asistido: descarta movimientos contra paredes y penaliza casillas visitadas. Son reglas adicionales, no conocimientos aprendidos por la red.
+
+La precisión de clasificación no equivale al porcentaje de laberintos completados.
+
+### Estructura de la Parte 3
+
+- `laberinto_mundo.py`: mapas, movimiento, BFS y navegación asistida.
+- `laberinto_red.py`: red neuronal y entrenamiento con NumPy.
+- `laberinto.py`: juego Pygame, sprites y pérdida.
+- `test_laberinto.py`: pruebas automáticas.
+
+### Ejecutar
+
+    uv sync
+    uv run laberinto.py
+
+### Controles
+
+| Tecla | Acción |
+|---|---|
+| 1 | Entrenar una época |
+| 2 | Entrenar cien épocas |
+| 3 | Entrenamiento continuo |
+| A | Alternar red pura y navegación asistida |
+| P | Alternar navegación automática y paso a paso |
+| Espacio | Avanzar un paso en modo manual |
+| N | Cambiar mapa |
+| G | Nuevas posiciones y meta |
+| C | Reiniciar contadores |
+| R | Reiniciar pesos y entrenamiento |
+| Esc | Salir |
+
+### Resultados de los Experimentos (Parte 3)
+
+A continuación se documentan los resultados obtenidos al ejecutar los experimentos propuestos en la guía del proyecto.
+
+#### Experimento 1: Neurito sin entrenar
+Al no tener entrenamiento, la red arroja probabilidades muy similares para todas sus salidas (cerca del 25% para arriba, abajo, izquierda y derecha). Esto hace que Neurito se mueva de forma totalmente aleatoria por el mapa, chocando constantemente contra las paredes (aumentando el contador de paredes) y sufriendo múltiples atascos sin lograr encontrar la meta.
+
+#### Experimento 2: Entrenamiento (100, 200, 300 y 400 épocas)
+Se evaluó la exactitud de la red en el conjunto de prueba a medida que aumentaban las épocas:
+- 100 épocas: 86.2%
+- 200 épocas: 90.8%
+- 300 épocas: 91.3%
+- 400 épocas: 91.2%
+Se observa que la red aprende rápidamente en las primeras 100 épocas, pero luego la precisión se estanca alrededor del 91%, mostrando que el modelo ya ha alcanzado su capacidad máxima de generalización para estos datos.
+
+#### Experimento 3: Red Pura vs. Navegación Asistida
+- Red Pura: Toma decisiones basadas únicamente en la probabilidad de la red. Es un método más rápido de ejecutar, pero Neurito se traba con mucha más frecuencia, ya que la red no tiene memoria para recordar que ya pasó por una casilla, entrando en ciclos infinitos o chocando contra muros.
+- Navegación Asistida: Al añadir reglas externas (ignorar paredes y penalizar casillas ya visitadas), la exactitud del recorrido mejora drásticamente. La red pura es buena prediciendo el siguiente paso ideal, pero las reglas evitan que el agente cometa errores fatales en la simulación.
+
+#### Experimento 4: Cambio de neuronas ocultas
+- 16 neuronas: La red sufre de subajuste (underfitting). No tiene suficientes parámetros para entender los 3 mapas, por lo que la precisión baja drásticamente y Neurito no logra llegar a la meta en la mayoría de los casos.
+- 32 neuronas: Mejora notablemente, pero le cuesta más converger que a la configuración base.
+- 96 neuronas (Base): Es el punto óptimo, logrando el mejor balance entre precisión y velocidad de entrenamiento.
+- 128 neuronas: El rendimiento es casi idéntico al de 96, pero el entrenamiento es más lento. Añadir más neuronas no mejora el resultado y puede causar sobreajuste.
+
+#### Experimento 5: Cambio de la tasa de aprendizaje
+- Si se baja a 0.1: La red aprende más lento, necesitando muchas más épocas para llegar al 91% de precisión.
+- Si se sube a 1.0: El entrenamiento se vuelve inestable, la pérdida oscila y la red no logra converger correctamente.
+- Con 0.45: Es un valor alto pero bien ajustado para este problema, permitiendo que la red aprenda rápido sin desestabilizarse.
+
+#### Experimento 6: Cambio de mapa
+El modelo utiliza un vector one-hot para identificar cuál de los 3 mapas está jugando. Si se añade un cuarto mapa nuevo, la red no sabrá cómo actuar en él inicialmente, ya que nunca vio ese identificador en el entrenamiento. La red generaliza bien a posiciones de inicio y meta nuevas dentro de los mapas conocidos, pero requiere reentrenamiento para aprender un mapa completamente nuevo.
+
+### Alcance y limitaciones (Parte 3)
+
+El modelo no interpreta capturas de pantalla: trabaja con características estructuradas. Conoce el identificador de cada mapa. Los tres mapas pertenecen al mismo universo de entrenamiento. La evaluación demuestra generalización a pares de posición-meta no entrenados, no a laberintos totalmente desconocidos. Para eso habría que representar también las paredes de cualquier mapa nuevo y entrenar y evaluar en mapas separados.
+'@ | Out-File -Encoding utf8 README.md
